@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const svgsContainer = document.getElementById('svgs-container');
+  const svgsGrid = document.getElementById('svgs-grid');
   const loadingElement = document.getElementById('loading');
   const noSvgsElement = document.getElementById('no-svgs');
+  const toast = document.getElementById('toast');
 
   // Execute script in the active tab to extract SVGs
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -21,59 +22,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Display the SVGs in the popup
+  // Display the SVGs in a grid
   function displaySvgs(svgs) {
     svgs.forEach((svg, index) => {
       const svgItem = document.createElement('div');
       svgItem.className = 'svg-item';
+      svgItem.title = 'Left click to copy SVG, right click to copy JSON friendly';
       
       const svgPreview = document.createElement('div');
       svgPreview.className = 'svg-preview';
       svgPreview.innerHTML = svg;
       
-      const buttons = document.createElement('div');
-      buttons.className = 'buttons';
-      
-      const copyButton = createButton('Copy SVG', () => {
-        copyToClipboard(svg, copyButton);
+      // Left click to copy SVG
+      svgItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        copyToClipboard(svg, 'SVG');
       });
       
-      const copyJsonButton = createButton('Copy JSON Friendly', () => {
-        copyToClipboard(JSON.stringify(svg), copyJsonButton);
+      // Right click to copy JSON friendly SVG
+      svgItem.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        copyToClipboard(JSON.stringify(svg), 'JSON friendly SVG');
       });
-      
-      buttons.appendChild(copyButton);
-      buttons.appendChild(copyJsonButton);
       
       svgItem.appendChild(svgPreview);
-      svgItem.appendChild(buttons);
-      svgsContainer.appendChild(svgItem);
+      svgsGrid.appendChild(svgItem);
     });
   }
   
-  // Create a button with click handler
-  function createButton(text, clickHandler) {
-    const button = document.createElement('button');
-    button.innerHTML = `<span class="copy-icon">📋</span>${text}`;
-    button.addEventListener('click', clickHandler);
-    return button;
-  }
-  
-  // Copy content to clipboard and show feedback
-  function copyToClipboard(text, button) {
+  // Copy content to clipboard and show toast
+  function copyToClipboard(text, type) {
     navigator.clipboard.writeText(text)
       .then(() => {
-        const originalText = button.innerHTML;
-        button.innerHTML = '✓ Copied!';
-        button.classList.add('copy-success');
+        // Show toast message
+        toast.textContent = `Copied ${type}!`;
+        toast.style.opacity = '1';
         
+        // Hide toast after 1.5 seconds
         setTimeout(() => {
-          button.innerHTML = originalText;
-          button.classList.remove('copy-success');
+          toast.style.opacity = '0';
         }, 1500);
       })
       .catch(err => {
         console.error('Failed to copy: ', err);
+        toast.textContent = 'Copy failed';
+        toast.style.opacity = '1';
+        
+        setTimeout(() => {
+          toast.style.opacity = '0';
+        }, 1500);
       });
   }
 });

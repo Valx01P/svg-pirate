@@ -6,4 +6,8 @@ To use:
 - Go to your browser extensions
 - Enable developer mode
 - Unpack the folder into your browser extensions
-- Have fun
+
+- Single click to copy raw svg
+- Right click to copy json friendly svg
+
+Enjoy!
